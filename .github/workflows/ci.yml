@@ -16,16 +16,17 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DISCORD_CLIENT_ID: ${{ secrets.DISCORD_CLIENT_ID }}
       DISCORD_CLIENT_SECRET: ${{ secrets.DISCORD_CLIENT_SECRET }}
+      REDIS_URL: ${{ secrets.REDIS_URL }}
       NEXT_TELEMETRY_DISABLED: 1
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '23.1.0'
+          node-version: '20' # Latest LTS as of May 2025
           cache: 'pnpm'
 
       - name: Install pnpm
@@ -34,14 +35,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Copy .env.example files
+        shell: bash
+        run: find . -type f -name ".env.example" -exec sh -c 'cp "$1" "${1%.*}"' _ {} \;
+
       - name: Lint
-        run: pnpm run lint
+        run: pnpm lint
 
       - name: Format check
-        run: pnpm run format:check
+        run: pnpm format:check
 
-      - name: Type check
-        run: pnpm tsc --noEmit
+      - name: Typecheck
+        run: pnpm typecheck
 
       - name: Build
-        run: pnpm run build
+        run: pnpm build
